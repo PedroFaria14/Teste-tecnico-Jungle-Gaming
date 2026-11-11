@@ -1,0 +1,39 @@
+{
+  "name": "jungle-wagering-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/main.ts",
+    "dev": "bun --watch run src/main.ts",
+    "infra:up": "docker compose up -d postgres localstack",
+    "infra:down": "docker compose down -v",
+    "migration:run": "bun run scripts/migrate.ts run",
+    "migration:revert": "bun run scripts/migrate.ts revert",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:unit": "bun test test/unit",
+    "test:integration": "bun test test/integration --timeout 60000",
+    "test:e2e": "playwright test",
+    "test:load": "bun run scripts/load-test.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1166.0",
+    "@nestjs/common": "^11",
+    "@nestjs/core": "^11",
+    "@nestjs/platform-express": "^11",
+    "@nestjs/swagger": "^11",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
+    "typescript": "~5.9"
+  }
+}

@@ -1,0 +1,71 @@
+name: jungle-wagering
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wagering
+      POSTGRES_PASSWORD: wagering
+      POSTGRES_DB: wagering
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-test-db.sql:ro
+    healthcheck:
+      # Via TCP (-h 127.0.0.1): no primeiro start o Postgres sobe um servidor temporário só em socket
+      # para rodar os scripts de init e depois reinicia; checar por TCP evita "passar" nessa fase.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U wagering -d wagering && psql -h 127.0.0.1 -U wagering -d wagering_test -c 'select 1' >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  localstack:
+    image: localstack/localstack:3.8.1
+    environment:
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: us-east-1
+      SQS_ENDPOINT_STRATEGY: path
+    ports:
+      - "4566:4566"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/health | grep -q '\"sqs\": \"\\(available\\|running\\)\"'"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  # Roda as migrations UMA vez antes das instâncias subirem (evita corrida entre réplicas).
+  migrate:
+    build: .
+    command: ["bun", "run", "scripts/migrate.ts", "run"]
+    environment:
+      DATABASE_URL: postgres://wagering:wagering@postgres:5432/wagering
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 3 instâncias idênticas (HTTP + consumer SQS + outbox publisher + worker de referências).
+  app:
+    build: .
+    deploy:
+      replicas: 3
+    ports:
+      - "3000-3002:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://wagering:wagering@postgres:5432/wagering
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      LOG_LEVEL: info
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health/ready >/dev/null || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy

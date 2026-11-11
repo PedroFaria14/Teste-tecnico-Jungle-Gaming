@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-11-11T18:08:44.961Z",
+  "environment": {
+    "os": "Windows_NT 10.0.26200 (x64)",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12400F × 12 threads",
+    "memoryGb": 15.8,
+    "runtime": "Bun 1.4.4",
+    "targets": [
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      "http://127.0.0.1:3002"
+    ],
+    "topology": "3 réplicas NestJS (Docker Compose) + PostgreSQL 16 + LocalStack 3.8.1 na mesma máquina; gerador de carga também na mesma máquina"
+  },
+  "parameters": {
+    "durationSPerScenario": 20,
+    "concurrency": 64,
+    "wallets": 200
+  },
+  "results": [
+    {
+      "scenario": "distributed",
+      "concurrency": 64,
+      "durationS": 20.9,
+      "requests": 12943,
+      "throughputRps": 620.7,
+      "latencyMs": {
+        "p50": 58.8,
+        "p95": 325.4,
+        "p99": 928.9,
+        "max": 1740.1
+      },
+      "statuses": {
+        "200": 1329,
+        "201": 11614
+      },
+      "errorRatePct": 0,
+      "lockConflicts": 0,
+      "unitOfWorkRetries": 0,
+      "duplicatesDetected": 1329,
+      "outboxMaxLagS": 8.95,
+      "outboxDrainAfterRunS": 3.24
+    },
+    {
+      "scenario": "hot-wallet",
+      "concurrency": 64,
+      "durationS": 20.9,
+      "requests": 1527,
+      "throughputRps": 73.1,
+      "latencyMs": {
+        "p50": 525.7,
+        "p95": 2506.6,
+        "p99": 3419.7,
+        "max": 4481.3
+      },
+      "statuses": {
+        "201": 1527
+      },
+      "errorRatePct": 0,
+      "lockConflicts": 0,
+      "unitOfWorkRetries": 0,
+      "duplicatesDetected": 0,
+      "outboxMaxLagS": 4.24,
+      "outboxDrainAfterRunS": 0.55
+    },
+    {
+      "scenario": "replay-storm",
+      "concurrency": 64,
+      "durationS": 20,
+      "requests": 39662,
+      "throughputRps": 1982.2,
+      "latencyMs": {
+        "p50": 19.6,
+        "p95": 102.2,
+        "p99": 155.2,
+        "max": 996.6
+      },
+      "statuses": {
+        "200": 39661,
+        "201": 1
+      },
+      "errorRatePct": 0,
+      "lockConflicts": 0,
+      "unitOfWorkRetries": 0,
+      "duplicatesDetected": 39661,
+      "outboxMaxLagS": 0.38,
+      "outboxDrainAfterRunS": 0
+    }
+  ],
+  "finalConsistency": {
+    "walletsChecked": 202,
+    "consistent": 202,
+    "inconsistent": [],
+    "hotWallet": {
+      "balance": "99399.00",
+      "version": 1528
+    },
+    "replayStormLedgerEntries": 2
+  }
+}
